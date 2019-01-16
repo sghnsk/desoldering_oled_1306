@@ -10,17 +10,13 @@
 * to restart the all procedure over again
 */
 
-#include <LiquidCrystal.h>
+#include <Wire.h>
+#include <LiquidCrystal_SSD1306.h>
 #include <EEPROM.h>
 
 
-// The LCD 0802 parallel interface
-const byte LCD_RS_PIN     = 13;
-const byte LCD_E_PIN      = 12;
-const byte LCD_DB4_PIN    = 5;
-const byte LCD_DB5_PIN    = 6;
-const byte LCD_DB6_PIN    = 7;
-const byte LCD_DB7_PIN    = 8;
+// The OLED 1306 
+#define OLED_RESET -1
 
 // Rotary encoder interface
 const byte R_MAIN_PIN = 2;                      // Rotary Encoder main pin (right)
@@ -571,11 +567,11 @@ void ENCODER::cnangeINTR(void) {                // Interrupt function, called wh
 }
 
 //------------------------------------------ class lcd DSPLay for soldering iron -----------------------------
-class DSPL : protected LiquidCrystal {
+class DSPL : protected LiquidCrystal_SSD1306 {
 public:
-	DSPL(byte RS, byte E, byte DB4, byte DB5, byte DB6, byte DB7) : LiquidCrystal(RS, E, DB4, DB5, DB6, DB7) { }
+	DSPL() : LiquidCrystal_SSD1306(SSD1306_SWITCHCAPVCC, SSD1306_I2C_ADDRESS, OLED_RESET) { }
 	void init(void);
-	void clear(void) { LiquidCrystal::clear(); }
+	void clear(void) { LiquidCrystal_SSD1306::clear(); }
 	void tSet(uint16_t t, bool celsuis);        // Show the temperature set
 	void tCurr(uint16_t t);                     // Show The current temperature
 	void pSet(byte p);                          // Show the power set
@@ -600,8 +596,8 @@ private:
 };
 
 void DSPL::init(void) {
-	LiquidCrystal::begin(8, 2);
-	LiquidCrystal::clear();
+	LiquidCrystal_SSD1306::begin(21, 7);
+	LiquidCrystal_SSD1306::clear();
 	full_second_line = false;
 }
 
@@ -609,23 +605,23 @@ void DSPL::tSet(uint16_t t, bool celsius) {
 	char buff[5];
 	char units = 'C';
 	if (!celsius) units = 'F';
-	LiquidCrystal::setCursor(0, 0);
+	LiquidCrystal_SSD1306::setCursor(0, 0);
 	sprintf(buff, "%3d%c", t, units);
-	LiquidCrystal::print(buff);
+	LiquidCrystal_SSD1306::print(buff);
 }
 
 void DSPL::tCurr(uint16_t t) {
 	char buff[4];
-	LiquidCrystal::setCursor(0, 1);
+	LiquidCrystal_SSD1306::setCursor(0, 1);
 	if (t < 1000) {
 		sprintf(buff, "%3d", t);
 	} else {
-		LiquidCrystal::print(F("xxx"));
+		LiquidCrystal_SSD1306::print(F("xxx"));
 		return;
 	}
-	LiquidCrystal::print(buff);
+	LiquidCrystal_SSD1306::print(buff);
 	if (full_second_line) {
-		LiquidCrystal::print(F("    "));
+		LiquidCrystal_SSD1306::print(F("    "));
 		full_second_line = false;
 	}
 }
@@ -633,112 +629,112 @@ void DSPL::tCurr(uint16_t t) {
 void DSPL::pSet(byte p) {
 	char buff[6];
 	sprintf(buff, "P:%3d", p);
-	LiquidCrystal::setCursor(0, 0);
-	LiquidCrystal::print(buff);
+	LiquidCrystal_SSD1306::setCursor(0, 0);
+	LiquidCrystal_SSD1306::print(buff);
 }
 
 void DSPL::timeToOff(byte sec) {
 	char buff[5];
 	sprintf(buff, " %3d", sec);
-	LiquidCrystal::setCursor(4, 0);
-	LiquidCrystal::print(buff);
+	LiquidCrystal_SSD1306::setCursor(4, 0);
+	LiquidCrystal_SSD1306::print(buff);
 }
 
 void DSPL::msgNoIron(void) {
-	LiquidCrystal::setCursor(0, 1);
-	LiquidCrystal::print(F("no iron "));
+	LiquidCrystal_SSD1306::setCursor(0, 1);
+	LiquidCrystal_SSD1306::print(F("no iron "));
 	full_second_line = true;
 }
 
 void DSPL::msgReady(void) {
-	LiquidCrystal::setCursor(4, 0);
-	LiquidCrystal::print(F(" rdy"));
+	LiquidCrystal_SSD1306::setCursor(4, 0);
+	LiquidCrystal_SSD1306::print(F(" rdy"));
 }
 
 void DSPL::msgWorking(void) {
-	LiquidCrystal::setCursor(4, 0);
-	LiquidCrystal::print(F(" wrk"));
+	LiquidCrystal_SSD1306::setCursor(4, 0);
+	LiquidCrystal_SSD1306::print(F(" wrk"));
 }
 
 void DSPL::msgOn(void) {
-	LiquidCrystal::setCursor(4, 0);
-	LiquidCrystal::print(F("  ON"));
+	LiquidCrystal_SSD1306::setCursor(4, 0);
+	LiquidCrystal_SSD1306::print(F("  ON"));
 }
 
 void DSPL::msgOff(void) {
-	LiquidCrystal::setCursor(4, 0);
-	LiquidCrystal::print(F(" OFF"));
+	LiquidCrystal_SSD1306::setCursor(4, 0);
+	LiquidCrystal_SSD1306::print(F(" OFF"));
 }
 
 void DSPL::msgCold(void) {
-	LiquidCrystal::setCursor(0, 1);
-	LiquidCrystal::print(F("  cold  "));
+	LiquidCrystal_SSD1306::setCursor(0, 1);
+	LiquidCrystal_SSD1306::print(F("  cold  "));
 	full_second_line = true;
 }
 
 void DSPL::msgFail(void) {
-	LiquidCrystal::setCursor(0, 1);
-	LiquidCrystal::print(F(" Failed "));
+	LiquidCrystal_SSD1306::setCursor(0, 1);
+	LiquidCrystal_SSD1306::print(F(" Failed "));
 }
 
 void DSPL::msgTune(void) {
-	LiquidCrystal::setCursor(0, 0);
-	LiquidCrystal::print(F("Tune"));
+	LiquidCrystal_SSD1306::setCursor(0, 0);
+	LiquidCrystal_SSD1306::print(F("Tune"));
 }
 
 void DSPL::msgCelsius(void) {
-	LiquidCrystal::setCursor(0, 1);
-	LiquidCrystal::print(F("Celsius "));
+	LiquidCrystal_SSD1306::setCursor(0, 1);
+	LiquidCrystal_SSD1306::print(F("Celsius "));
 }
 
 void DSPL::msgFarneheit(void) {
-	LiquidCrystal::setCursor(0, 1);
-	LiquidCrystal::print(F("Faren.  "));
+	LiquidCrystal_SSD1306::setCursor(0, 1);
+	LiquidCrystal_SSD1306::print(F("Faren.  "));
 }
 
 void DSPL::msgDefault() {
-	LiquidCrystal::setCursor(0, 1);
-	LiquidCrystal::print(F(" default"));
+	LiquidCrystal_SSD1306::setCursor(0, 1);
+	LiquidCrystal_SSD1306::print(F(" default"));
 }
 
 void DSPL::msgCancel(void) {
-	LiquidCrystal::setCursor(0, 1);
-	LiquidCrystal::print(F(" cancel "));
+	LiquidCrystal_SSD1306::setCursor(0, 1);
+	LiquidCrystal_SSD1306::print(F(" cancel "));
 }
 
 void DSPL::msgApply(void) {
-	LiquidCrystal::setCursor(0, 1);
-	LiquidCrystal::print(F(" save   "));
+	LiquidCrystal_SSD1306::setCursor(0, 1);
+	LiquidCrystal_SSD1306::print(F(" save   "));
 }
 
 void DSPL::setupMode(byte mode, byte p) {
 	char buff[5];
-	LiquidCrystal::clear();
-	LiquidCrystal::print(F("setup"));
-	LiquidCrystal::setCursor(1,1);
+	LiquidCrystal_SSD1306::clear();
+	LiquidCrystal_SSD1306::print(F("setup"));
+	LiquidCrystal_SSD1306::setCursor(1,1);
 	switch (mode) {
 	case 0:
-		LiquidCrystal::print(F("off:"));
+		LiquidCrystal_SSD1306::print(F("off:"));
 		if (p > 0) {
 			sprintf(buff, "%2dm", p);
-			LiquidCrystal::print(buff);
+			LiquidCrystal_SSD1306::print(buff);
 		} else {
-			LiquidCrystal::print(" NO");
+			LiquidCrystal_SSD1306::print(" NO");
 		}
 		break;
 	case 1:
-		LiquidCrystal::print(F("units"));
-		LiquidCrystal::setCursor(7, 1);
+		LiquidCrystal_SSD1306::print(F("units"));
+		LiquidCrystal_SSD1306::setCursor(7, 1);
 		if (p)
-		LiquidCrystal::print("C");
+		LiquidCrystal_SSD1306::print("C");
 		else
-		LiquidCrystal::print("F");
+		LiquidCrystal_SSD1306::print("F");
 		break;
 	case 2:
-		LiquidCrystal::print(F("calib. "));
+		LiquidCrystal_SSD1306::print(F("calib. "));
 		break;
 	case 3:
-		LiquidCrystal::print(F("tune"));
+		LiquidCrystal_SSD1306::print(F("tune"));
 		break;
 	}
 }
@@ -746,8 +742,8 @@ void DSPL::setupMode(byte mode, byte p) {
 void DSPL::percent(byte Power) {
 	char buff[6];
 	sprintf(buff, " %3d%c", Power, '%');
-	LiquidCrystal::setCursor(3, 1);
-	LiquidCrystal::print(buff);
+	LiquidCrystal_SSD1306::setCursor(3, 1);
+	LiquidCrystal_SSD1306::print(buff);
 }
 
 //------------------------------------------ class HISTORY ----------------------------------------------------
@@ -1980,7 +1976,7 @@ SCREEN* pidSCREEN::menu_long(void) {
 }
 //=================================== End of class declarations ================================================
 
-DSPL       disp(LCD_RS_PIN, LCD_E_PIN, LCD_DB4_PIN, LCD_DB5_PIN, LCD_DB6_PIN, LCD_DB7_PIN);
+DSPL       disp;
 ENCODER    rotEncoder(R_MAIN_PIN, R_SECD_PIN);
 BUTTON     rotButton(R_BUTN_PIN);
 IRON       iron(heaterPIN, probePIN);
