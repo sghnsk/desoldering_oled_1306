@@ -241,7 +241,8 @@ private:
 	uint16_t t_tip[3];
 	const uint16_t def_tip[3] = {587, 751, 916};// Default values of internal sensor readings at reference temperatures
 	const uint16_t def_set = 653;               // Default preset temperature in internal units
-	const uint16_t ambient_temp  = 350;         // Ambient temperatire in the internal units
+	// const uint16_t ambient_temp  = 350;         // Ambient temperatire in the internal units - thermistor
+	const uint16_t ambient_temp  = 0;         // Ambient temperatire in the internal units - thermocouple
 	const uint16_t ambient_tempC = 25;          // Ambient temperature in Celsius
 	const uint16_t max_temp      = 960;         // Maximum possible temperature readings in internal units
 };
