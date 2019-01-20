@@ -9,9 +9,8 @@
 * then the current IRON temperature is checked and the controller waits for check_period Timer1 interrupts
 * to restart the all procedure over again
 */
-
 #include <Wire.h>
-#include <LiquidCrystal_SSD1306.h>
+#include <U8x8lib.h>
 #include <EEPROM.h>
 
 
@@ -567,11 +566,11 @@ void ENCODER::cnangeINTR(void) {                // Interrupt function, called wh
 }
 
 //------------------------------------------ class lcd DSPLay for soldering iron -----------------------------
-class DSPL : protected LiquidCrystal_SSD1306 {
+class DSPL : protected U8X8_SSD1306_128X64_NONAME_HW_I2C {
 public:
-	DSPL() : LiquidCrystal_SSD1306(SSD1306_SWITCHCAPVCC, SSD1306_I2C_ADDRESS, OLED_RESET) { }
+	DSPL() : U8X8_SSD1306_128X64_NONAME_HW_I2C(OLED_RESET) { }
 	void init(void);
-	void clear(void) { LiquidCrystal_SSD1306::clear(); }
+	void clear(void) { U8X8_SSD1306_128X64_NONAME_HW_I2C::clear(); }
 	void tSet(uint16_t t, bool celsuis);        // Show the temperature set
 	void tCurr(uint16_t t);                     // Show The current temperature
 	void pSet(byte p);                          // Show the power set
@@ -596,8 +595,9 @@ private:
 };
 
 void DSPL::init(void) {
-	LiquidCrystal_SSD1306::begin(21, 7);
-	LiquidCrystal_SSD1306::clear();
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::begin();
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::clear();
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::setFont(u8x8_font_amstrad_cpc_extended_r);
 	full_second_line = false;
 }
 
@@ -605,23 +605,23 @@ void DSPL::tSet(uint16_t t, bool celsius) {
 	char buff[5];
 	char units = 'C';
 	if (!celsius) units = 'F';
-	LiquidCrystal_SSD1306::setCursor(0, 0);
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(0, 0);
 	sprintf(buff, "%3d%c", t, units);
-	LiquidCrystal_SSD1306::print(buff);
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(buff);
 }
 
 void DSPL::tCurr(uint16_t t) {
 	char buff[4];
-	LiquidCrystal_SSD1306::setCursor(0, 1);
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(0, 1);
 	if (t < 1000) {
 		sprintf(buff, "%3d", t);
 	} else {
-		LiquidCrystal_SSD1306::print(F("xxx"));
+		U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F("xxx"));
 		return;
 	}
-	LiquidCrystal_SSD1306::print(buff);
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(buff);
 	if (full_second_line) {
-		LiquidCrystal_SSD1306::print(F("    "));
+		U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F("    "));
 		full_second_line = false;
 	}
 }
@@ -629,112 +629,112 @@ void DSPL::tCurr(uint16_t t) {
 void DSPL::pSet(byte p) {
 	char buff[6];
 	sprintf(buff, "P:%3d", p);
-	LiquidCrystal_SSD1306::setCursor(0, 0);
-	LiquidCrystal_SSD1306::print(buff);
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(0, 0);
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(buff);
 }
 
 void DSPL::timeToOff(byte sec) {
 	char buff[5];
 	sprintf(buff, " %3d", sec);
-	LiquidCrystal_SSD1306::setCursor(4, 0);
-	LiquidCrystal_SSD1306::print(buff);
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(4, 0);
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(buff);
 }
 
 void DSPL::msgNoIron(void) {
-	LiquidCrystal_SSD1306::setCursor(0, 1);
-	LiquidCrystal_SSD1306::print(F("no iron "));
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(0, 1);
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F("no iron "));
 	full_second_line = true;
 }
 
 void DSPL::msgReady(void) {
-	LiquidCrystal_SSD1306::setCursor(4, 0);
-	LiquidCrystal_SSD1306::print(F(" rdy"));
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(4, 0);
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F(" rdy"));
 }
 
 void DSPL::msgWorking(void) {
-	LiquidCrystal_SSD1306::setCursor(4, 0);
-	LiquidCrystal_SSD1306::print(F(" wrk"));
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(4, 0);
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F(" wrk"));
 }
 
 void DSPL::msgOn(void) {
-	LiquidCrystal_SSD1306::setCursor(4, 0);
-	LiquidCrystal_SSD1306::print(F("  ON"));
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(4, 0);
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F("  ON"));
 }
 
 void DSPL::msgOff(void) {
-	LiquidCrystal_SSD1306::setCursor(4, 0);
-	LiquidCrystal_SSD1306::print(F(" OFF"));
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(4, 0);
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F(" OFF"));
 }
 
 void DSPL::msgCold(void) {
-	LiquidCrystal_SSD1306::setCursor(0, 1);
-	LiquidCrystal_SSD1306::print(F("  cold  "));
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(0, 1);
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F("  cold  "));
 	full_second_line = true;
 }
 
 void DSPL::msgFail(void) {
-	LiquidCrystal_SSD1306::setCursor(0, 1);
-	LiquidCrystal_SSD1306::print(F(" Failed "));
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(0, 1);
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F(" Failed "));
 }
 
 void DSPL::msgTune(void) {
-	LiquidCrystal_SSD1306::setCursor(0, 0);
-	LiquidCrystal_SSD1306::print(F("Tune"));
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(0, 0);
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F("Tune"));
 }
 
 void DSPL::msgCelsius(void) {
-	LiquidCrystal_SSD1306::setCursor(0, 1);
-	LiquidCrystal_SSD1306::print(F("Celsius "));
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(0, 1);
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F("Celsius "));
 }
 
 void DSPL::msgFarneheit(void) {
-	LiquidCrystal_SSD1306::setCursor(0, 1);
-	LiquidCrystal_SSD1306::print(F("Faren.  "));
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(0, 1);
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F("Faren.  "));
 }
 
 void DSPL::msgDefault() {
-	LiquidCrystal_SSD1306::setCursor(0, 1);
-	LiquidCrystal_SSD1306::print(F(" default"));
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(0, 1);
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F(" default"));
 }
 
 void DSPL::msgCancel(void) {
-	LiquidCrystal_SSD1306::setCursor(0, 1);
-	LiquidCrystal_SSD1306::print(F(" cancel "));
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(0, 1);
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F(" cancel "));
 }
 
 void DSPL::msgApply(void) {
-	LiquidCrystal_SSD1306::setCursor(0, 1);
-	LiquidCrystal_SSD1306::print(F(" save   "));
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(0, 1);
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F(" save   "));
 }
 
 void DSPL::setupMode(byte mode, byte p) {
 	char buff[5];
-	LiquidCrystal_SSD1306::clear();
-	LiquidCrystal_SSD1306::print(F("setup"));
-	LiquidCrystal_SSD1306::setCursor(1,1);
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::clear();
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F("setup"));
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(1,1);
 	switch (mode) {
 	case 0:
-		LiquidCrystal_SSD1306::print(F("off:"));
+		U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F("off:"));
 		if (p > 0) {
 			sprintf(buff, "%2dm", p);
-			LiquidCrystal_SSD1306::print(buff);
+			U8X8_SSD1306_128X64_NONAME_HW_I2C::print(buff);
 		} else {
-			LiquidCrystal_SSD1306::print(" NO");
+			U8X8_SSD1306_128X64_NONAME_HW_I2C::print(" NO");
 		}
 		break;
 	case 1:
-		LiquidCrystal_SSD1306::print(F("units"));
-		LiquidCrystal_SSD1306::setCursor(7, 1);
+		U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F("units"));
+		U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(7, 1);
 		if (p)
-		LiquidCrystal_SSD1306::print("C");
+		U8X8_SSD1306_128X64_NONAME_HW_I2C::print("C");
 		else
-		LiquidCrystal_SSD1306::print("F");
+		U8X8_SSD1306_128X64_NONAME_HW_I2C::print("F");
 		break;
 	case 2:
-		LiquidCrystal_SSD1306::print(F("calib. "));
+		U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F("calib. "));
 		break;
 	case 3:
-		LiquidCrystal_SSD1306::print(F("tune"));
+		U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F("tune"));
 		break;
 	}
 }
@@ -742,8 +742,8 @@ void DSPL::setupMode(byte mode, byte p) {
 void DSPL::percent(byte Power) {
 	char buff[6];
 	sprintf(buff, " %3d%c", Power, '%');
-	LiquidCrystal_SSD1306::setCursor(3, 1);
-	LiquidCrystal_SSD1306::print(buff);
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(3, 1);
+	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(buff);
 }
 
 //------------------------------------------ class HISTORY ----------------------------------------------------
