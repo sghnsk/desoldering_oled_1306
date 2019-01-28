@@ -13,6 +13,8 @@
 #include <U8x8lib.h>
 #include <EEPROM.h>
 
+// pid tune mode
+#define PID_TUNE 1
 
 // The OLED 1306 
 #define OLED_RESET -1
@@ -1857,13 +1859,16 @@ SCREEN* tuneSCREEN::menu_long(void) {
 	return this;
 }
 
+
 //---------------------------------------- class pidSCREEN [tune the PID coefficients] -------------------------
+#ifdef PID_TUNE
 class pidSCREEN : public SCREEN {
 public:
-	pidSCREEN(IRON* Iron, ENCODER* ENC) {
+	pidSCREEN(IRON* Iron, ENCODER* ENC, IRON_CFG* CFG) {
 		pIron = Iron;
 		pEnc  = ENC;
 		smode = S_CONFIG;
+		pCfg  = CFG;
 	}
 	virtual void init(void);
 	virtual SCREEN* menu(void);
@@ -1873,6 +1878,7 @@ public:
 private:
 	IRON*    pIron;                             // Pointer to the IRON instance
 	ENCODER* pEnc;                              // Pointer to the rotary encoder instance
+	IRON_CFG* pCfg;                             // Pointer to the config instance
 	byte     mode;                              // Which temperature to tune [0-3]: select, Kp, Ki, Kd
 	uint32_t update_screen;                     // Time in ms when update the screen (print nre info)
 	int      temp_set;
@@ -1902,12 +1908,13 @@ void pidSCREEN::rotaryValue(int16_t value) {
 		case 2:
 			Serial.println("Ki");
 			break;
+		case 3:
+			Serial.println("Kd");
+			break;
 		case 4:
 			Serial.println(F("Temp"));
 			break;
-		case 3:
 		default:
-			Serial.println("Kd");
 			break;
 		}
 	} else {
@@ -1920,15 +1927,19 @@ void pidSCREEN::rotaryValue(int16_t value) {
 			Serial.print(F("Ki = "));
 			pIron->changePID(mode, value);
 			break;
+		case 3:
+			Serial.print(F("Kd = "));
+			pIron->changePID(mode, value);
+			break;
 		case 4:
 			Serial.print(F("Temp = "));
 			temp_set = value;
 			pIron->setTemp(value);
+			int tempH = pCfg->tempHuman(temp_set);
+			Serial.print(tempH);
+			Serial.print(F(" "));
 			break;
-		case 3:
 		default:
-			Serial.print(F("Kd = "));
-			pIron->changePID(mode, value);
 			break;
 		}
 		Serial.println(value);
@@ -1941,9 +1952,10 @@ void pidSCREEN::show(void) {
 	if (pIron->isOn()) {
 		char buff[60];
 		int temp    = pIron->getCurrTemp();
+		int tempH     = pCfg->tempHuman(temp);
 		uint16_t td = pIron->tempDispersion();
 		uint16_t pd = pIron->powerDispersion();
-		sprintf(buff, "%3d: td = %3d, pd = %3d --- ", temp_set - temp, td, pd);
+		sprintf(buff, "tempH = %3d; %3d: td = %3d, pd = %3d --- ", tempH, temp_set - temp, td, pd);
 		Serial.println(buff);
 		//if ((temp_set - temp) > 30) Serial.println("");
 	}
@@ -1974,6 +1986,7 @@ SCREEN* pidSCREEN::menu_long(void) {
 	Serial.println("The iron is ON");
 	return this;
 }
+#endif
 //=================================== End of class declarations ================================================
 
 DSPL       disp;
@@ -1990,10 +2003,13 @@ powerSCREEN  powerScr(&iron, &disp, &rotEncoder, &ironCfg);
 configSCREEN cfgScr(&iron, &disp, &rotEncoder, &ironCfg);
 calibSCREEN  tipScr(&iron, &disp, &rotEncoder, &ironCfg, &simpleBuzzer);
 tuneSCREEN   tuneScr(&iron, &disp, &rotEncoder, &simpleBuzzer, &ironCfg);
-//pidSCREEN    pidScr(&iron, &rotEncoder);
 
+#ifdef PID_TUNE
+pidSCREEN    pidScr(&iron, &rotEncoder, &ironCfg);
+SCREEN *pCurrentScreen = &pidScr;
+#else
 SCREEN *pCurrentScreen = &offScr;
-//SCREEN *pCurrentScreen = &pidScr;
+#endif
 
 /*
 * The timer1 overflow interrupt handler.
@@ -2029,7 +2045,9 @@ void rotPushChange(void) {
 
 // the setup routine runs once when you press reset:
 void setup() {
-	//  Serial.begin(115200);
+#ifdef PID_TUNE
+	Serial.begin(9600);
+#endif
 	disp.init();
 
 	// Load configuration parameters
