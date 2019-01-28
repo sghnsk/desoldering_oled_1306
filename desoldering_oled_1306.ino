@@ -837,9 +837,9 @@ float HISTORY::gradient(void) {
 class PID {
 public:
 	PID(void) {
-		Kp = 2009;
-		Ki =   16;
-		Kd = 2048;
+		Kp = 3000;
+		Ki = 40;
+		Kd = 760;
 	}
 	void resetPID(int temp = -1);               // reset PID algoritm history parameters
 	// Calculate the power to be applied
