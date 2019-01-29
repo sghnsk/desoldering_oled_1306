@@ -14,7 +14,7 @@
 #include <EEPROM.h>
 
 // pid tune mode
-#define PID_TUNE 1
+// #define PID_TUNE 1
 
 // The OLED 1306 
 #define OLED_RESET -1
@@ -838,8 +838,8 @@ class PID {
 public:
 	PID(void) {
 		Kp = 3000;
-		Ki = 40;
-		Kd = 760;
+		Ki = 13;
+		Kd = 797;
 	}
 	void resetPID(int temp = -1);               // reset PID algoritm history parameters
 	// Calculate the power to be applied
