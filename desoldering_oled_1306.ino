@@ -838,7 +838,7 @@ class PID {
 public:
 	PID(void) {
 		Kp = 3000;
-		Ki = 13;
+		Ki = 32;
 		Kd = 797;
 	}
 	void resetPID(int temp = -1);               // reset PID algoritm history parameters
