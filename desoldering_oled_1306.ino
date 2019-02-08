@@ -985,7 +985,7 @@ private:
 	const uint16_t temp_no_iron    = 980;       // Sensor reading when the iron disconnected
 	const byte     max_power       = 255;       // maximum power to the iron (220)
 	const byte     max_fixed_power = 255;       // Maximum power in fiexed power mode
-	const uint16_t check_time      = 10000;     // Time in ms to check Whether the solder is heating
+	const uint16_t check_time      = 20000;     // Time in ms to check Whether the solder is heating
 	const uint16_t heat_expected   = 10;        // The iron should change the temperature at check_time
 	const uint32_t check_iron_ms   = 1000;      // The period in ms to check Whether the IRON is conected
 };
