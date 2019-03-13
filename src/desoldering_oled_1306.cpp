@@ -9,15 +9,11 @@
 * then the current IRON temperature is checked and the controller waits for check_period Timer1 interrupts
 * to restart the all procedure over again
 */
-#include <Wire.h>
-#include <U8x8lib.h>
+#include <CustomU8x8.h>
 #include <EEPROM.h>
 
 // pid tune mode
 // #define PID_TUNE 1
-
-// The OLED 1306 
-#define OLED_RESET -1
 
 // Rotary encoder interface
 const byte R_MAIN_PIN = 2;                      // Rotary Encoder main pin (right)
@@ -568,11 +564,11 @@ void ENCODER::cnangeINTR(void) {                // Interrupt function, called wh
 }
 
 //------------------------------------------ class lcd DSPLay for soldering iron -----------------------------
-class DSPL : protected U8X8_SSD1306_128X64_NONAME_HW_I2C {
+class DSPL : protected CustomDisplay {
 public:
-	DSPL() : U8X8_SSD1306_128X64_NONAME_HW_I2C(OLED_RESET) { }
+	DSPL() : CustomDisplay() { }
 	void init(void);
-	void clear(void) { U8X8_SSD1306_128X64_NONAME_HW_I2C::clear(); }
+	void clear(void) { CustomDisplay::clear(); }
 	void tSet(uint16_t t, bool celsuis);        // Show the temperature set
 	void tCurr(uint16_t t);                     // Show The current temperature
 	void pSet(byte p);                          // Show the power set
@@ -597,9 +593,9 @@ private:
 };
 
 void DSPL::init(void) {
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::begin();
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::clear();
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::setFont(u8x8_font_amstrad_cpc_extended_r);
+	CustomDisplay::begin();
+	CustomDisplay::clear();
+	CustomDisplay::setFont(u8x8_font_amstrad_cpc_extended_r);
 	full_second_line = false;
 }
 
@@ -607,23 +603,23 @@ void DSPL::tSet(uint16_t t, bool celsius) {
 	char buff[5];
 	char units = 'C';
 	if (!celsius) units = 'F';
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(0, 0);
+	CustomDisplay::setCursor(0, 0);
 	sprintf(buff, "%3d%c", t, units);
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(buff);
+	CustomDisplay::print(buff);
 }
 
 void DSPL::tCurr(uint16_t t) {
 	char buff[4];
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(0, 1);
+	CustomDisplay::setCursor(0, 1);
 	if (t < 1000) {
 		sprintf(buff, "%3d", t);
 	} else {
-		U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F("xxx"));
+		CustomDisplay::print(F("xxx"));
 		return;
 	}
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(buff);
+	CustomDisplay::print(buff);
 	if (full_second_line) {
-		U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F("    "));
+		CustomDisplay::print(F("    "));
 		full_second_line = false;
 	}
 }
@@ -631,112 +627,112 @@ void DSPL::tCurr(uint16_t t) {
 void DSPL::pSet(byte p) {
 	char buff[6];
 	sprintf(buff, "P:%3d", p);
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(0, 0);
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(buff);
+	CustomDisplay::setCursor(0, 0);
+	CustomDisplay::print(buff);
 }
 
 void DSPL::timeToOff(byte sec) {
 	char buff[5];
 	sprintf(buff, " %3d", sec);
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(4, 0);
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(buff);
+	CustomDisplay::setCursor(4, 0);
+	CustomDisplay::print(buff);
 }
 
 void DSPL::msgNoIron(void) {
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(0, 1);
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F("no iron "));
+	CustomDisplay::setCursor(0, 1);
+	CustomDisplay::print(F("no iron "));
 	full_second_line = true;
 }
 
 void DSPL::msgReady(void) {
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(4, 0);
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F(" rdy"));
+	CustomDisplay::setCursor(4, 0);
+	CustomDisplay::print(F(" rdy"));
 }
 
 void DSPL::msgWorking(void) {
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(4, 0);
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F(" wrk"));
+	CustomDisplay::setCursor(4, 0);
+	CustomDisplay::print(F(" wrk"));
 }
 
 void DSPL::msgOn(void) {
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(4, 0);
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F("  ON"));
+	CustomDisplay::setCursor(4, 0);
+	CustomDisplay::print(F("  ON"));
 }
 
 void DSPL::msgOff(void) {
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(4, 0);
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F(" OFF"));
+	CustomDisplay::setCursor(4, 0);
+	CustomDisplay::print(F(" OFF"));
 }
 
 void DSPL::msgCold(void) {
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(0, 1);
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F("  cold  "));
+	CustomDisplay::setCursor(0, 1);
+	CustomDisplay::print(F("  cold  "));
 	full_second_line = true;
 }
 
 void DSPL::msgFail(void) {
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(0, 1);
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F(" Failed "));
+	CustomDisplay::setCursor(0, 1);
+	CustomDisplay::print(F(" Failed "));
 }
 
 void DSPL::msgTune(void) {
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(0, 0);
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F("Tune"));
+	CustomDisplay::setCursor(0, 0);
+	CustomDisplay::print(F("Tune"));
 }
 
 void DSPL::msgCelsius(void) {
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(0, 1);
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F("Celsius "));
+	CustomDisplay::setCursor(0, 1);
+	CustomDisplay::print(F("Celsius "));
 }
 
 void DSPL::msgFarneheit(void) {
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(0, 1);
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F("Faren.  "));
+	CustomDisplay::setCursor(0, 1);
+	CustomDisplay::print(F("Faren.  "));
 }
 
 void DSPL::msgDefault() {
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(0, 1);
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F(" default"));
+	CustomDisplay::setCursor(0, 1);
+	CustomDisplay::print(F(" default"));
 }
 
 void DSPL::msgCancel(void) {
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(0, 1);
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F(" cancel "));
+	CustomDisplay::setCursor(0, 1);
+	CustomDisplay::print(F(" cancel "));
 }
 
 void DSPL::msgApply(void) {
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(0, 1);
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F(" save   "));
+	CustomDisplay::setCursor(0, 1);
+	CustomDisplay::print(F(" save   "));
 }
 
 void DSPL::setupMode(byte mode, byte p) {
 	char buff[5];
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::clear();
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F("setup"));
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(1,1);
+	CustomDisplay::clear();
+	CustomDisplay::print(F("setup"));
+	CustomDisplay::setCursor(1,1);
 	switch (mode) {
 	case 0:
-		U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F("off:"));
+		CustomDisplay::print(F("off:"));
 		if (p > 0) {
 			sprintf(buff, "%2dm", p);
-			U8X8_SSD1306_128X64_NONAME_HW_I2C::print(buff);
+			CustomDisplay::print(buff);
 		} else {
-			U8X8_SSD1306_128X64_NONAME_HW_I2C::print(" NO");
+			CustomDisplay::print(" NO");
 		}
 		break;
 	case 1:
-		U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F("units"));
-		U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(7, 1);
+		CustomDisplay::print(F("units"));
+		CustomDisplay::setCursor(7, 1);
 		if (p)
-		U8X8_SSD1306_128X64_NONAME_HW_I2C::print("C");
+		CustomDisplay::print("C");
 		else
-		U8X8_SSD1306_128X64_NONAME_HW_I2C::print("F");
+		CustomDisplay::print("F");
 		break;
 	case 2:
-		U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F("calib. "));
+		CustomDisplay::print(F("calib. "));
 		break;
 	case 3:
-		U8X8_SSD1306_128X64_NONAME_HW_I2C::print(F("tune"));
+		CustomDisplay::print(F("tune"));
 		break;
 	}
 }
@@ -744,8 +740,8 @@ void DSPL::setupMode(byte mode, byte p) {
 void DSPL::percent(byte Power) {
 	char buff[6];
 	sprintf(buff, " %3d%c", Power, '%');
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::setCursor(3, 1);
-	U8X8_SSD1306_128X64_NONAME_HW_I2C::print(buff);
+	CustomDisplay::setCursor(3, 1);
+	CustomDisplay::print(buff);
 }
 
 //------------------------------------------ class HISTORY ----------------------------------------------------
