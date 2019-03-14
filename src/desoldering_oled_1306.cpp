@@ -916,6 +916,8 @@ public:
 };
 
 void FastPWM::init(void) {
+	pinMode(9, OUTPUT);                          // Use D9 pin for heationg the PUMP
+	digitalWrite(9, LOW);                        // Switch-off the power
 	pinMode(10, OUTPUT);                          // Use D10 pin for heationg the IRON
 	digitalWrite(10, LOW);                        // Switch-off the power
 	tmr1_count = 0;
@@ -926,8 +928,9 @@ void FastPWM::init(void) {
 	TCCR1A  = 0;
 	ICR1    = 256;
 	TCCR1B  = _BV(WGM13) | _BV(CS10);             // Top value = ICR1, prescale = 1; 31250 Hz
-	TCCR1A |= _BV(COM1B1);                        // XOR D10 on OC1B, detached from D09
+	TCCR1A |= _BV(COM1A1)|_BV(COM1B1);                        // XOR D10 on OC1B
 	OCR1B   = 0;                                  // Switch-off the signal on pin D10;
+	OCR1A   = 100;
 	TIMSK1  = _BV(TOIE1);                         // Enable overflow interrupts @31250 Hz
 	interrupts();
 }
