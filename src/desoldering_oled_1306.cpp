@@ -912,11 +912,12 @@ class FastPWM {
 public:
 	FastPWM()                                   { }
 	void init(void);
-	void duty(byte d)                           { OCR1B = d; }
+	void dutyD9(byte d)                           { OCR1A = d; }
+	void dutyD10(byte d)                          { OCR1B = d; }
 };
 
 void FastPWM::init(void) {
-	pinMode(9, OUTPUT);                          // Use D9 pin for heationg the PUMP
+	pinMode(9, OUTPUT);                          // Use D9 pin for PUMP
 	digitalWrite(9, LOW);                        // Switch-off the power
 	pinMode(10, OUTPUT);                          // Use D10 pin for heationg the IRON
 	digitalWrite(10, LOW);                        // Switch-off the power
@@ -928,9 +929,9 @@ void FastPWM::init(void) {
 	TCCR1A  = 0;
 	ICR1    = 256;
 	TCCR1B  = _BV(WGM13) | _BV(CS10);             // Top value = ICR1, prescale = 1; 31250 Hz
-	TCCR1A |= _BV(COM1A1)|_BV(COM1B1);                        // XOR D10 on OC1B
+	TCCR1A |= _BV(COM1A1)|_BV(COM1B1);            // XOR D9, D10 on OC1B, OC1A
 	OCR1B   = 0;                                  // Switch-off the signal on pin D10;
-	OCR1A   = 100;
+	OCR1A   = 0;                                  // Switch-off the signal on pin D9;	
 	TIMSK1  = _BV(TOIE1);                         // Enable overflow interrupts @31250 Hz
 	interrupts();
 }
@@ -1025,7 +1026,7 @@ void IRON::init(void) {
 void IRON::switchPower(bool On) {
 	on = On;
 	if (!on) {
-		fastPWM.duty(0);
+		fastPWM.dutyD10(0);
 		fix_power = false;
 		return;
 	}
@@ -1056,7 +1057,7 @@ void IRON::checkIron(void) {
 	}
 
 	if (!on && !fix_power) {                      // If the soldering IRON is set to be switched off
-		fastPWM.duty(0);                            // Surely power off the IRON
+		fastPWM.dutyD10(0);                            // Surely power off the IRON
 	}
 	if (on && no_iron) {
 		switchPower(false);
@@ -1066,7 +1067,7 @@ void IRON::checkIron(void) {
 void IRON::keepTemp(void) {
 	uint16_t temp = analogRead(sPIN);			// Check the IRON temperature
 	if (actual_power > 0)						// Restore the power applied to the IRON
-	fastPWM.duty(actual_power);
+	fastPWM.dutyD10(actual_power);
 
 	if (temp < temp_no_iron) {
 		h_temp.put(temp);
@@ -1084,7 +1085,7 @@ void IRON::keepTemp(void) {
 			} else {
 				power = 0;
 				actual_power = 0;
-				fastPWM.duty(actual_power);
+				fastPWM.dutyD10(actual_power);
 				return;
 			}
 		}
@@ -1095,7 +1096,7 @@ void IRON::keepTemp(void) {
 			chill = true;
 		}
 		h_power.put(actual_power);
-		fastPWM.duty(actual_power);
+		fastPWM.dutyD10(actual_power);
 	} else {
 		if (!fix_power) actual_power = 0;
 	}
@@ -1105,7 +1106,7 @@ bool IRON::fixPower(byte Power) {
 	if (Power == 0) {                             // To switch off the IRON, set the Power to 0
 		fix_power = false;
 		actual_power = 0;
-		fastPWM.duty(0);
+		fastPWM.dutyD10(0);
 		return true;
 	}
 
@@ -1124,7 +1125,7 @@ bool IRON::fixPower(byte Power) {
 			actual_power = power & 0xff;
 		}
 	}
-	fastPWM.duty(actual_power);
+	fastPWM.dutyD10(actual_power);
 	return true;
 }
 
