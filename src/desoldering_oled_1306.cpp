@@ -21,7 +21,6 @@ const byte R_SECD_PIN = 4;                      // Rotary Encoder second pin (le
 const byte R_BUTN_PIN = 3;                      // Rotary Encoder push button pin
 
 const byte probePIN  = A0;                      // Thermometer pin from soldering iron
-const byte heaterPIN = 10;                      // The soldering iron heater pin
 const byte buzzerPIN = 11;                      // The simple buzzer to make a noise
 
 const uint16_t temp_minC = 180;                 // Minimum temperature in degrees of celsius
@@ -939,8 +938,8 @@ void FastPWM::init(void) {
 //------------------------------------------ class soldering iron ---------------------------------------------
 class IRON : protected PID {
 public:
-	IRON(byte heater_pin, byte sensor_pin) {
-		hPIN = heater_pin;
+	IRON(FastPWM* fastPWM, byte sensor_pin) {
+		pFastPWM = fastPWM;
 		sPIN = sensor_pin;
 		on = false;
 		fix_power = false;
@@ -965,9 +964,9 @@ public:
 	void     keepTemp(void);                    // Keep the IRON temperature, called by Timer1 interrupt
 	bool     fixPower(byte Power);              // Set the specified power to the the soldering iron
 private:
-	FastPWM  fastPWM;                           // Power the IRON using fast PWM through D10 pin using Timer1
+	FastPWM*  pFastPWM;                           // Power the IRON using fast PWM through D10 pin using Timer1
 	uint32_t check_ironMS;                      // Milliseconds when to check the IRON is connected
-	byte     hPIN, sPIN;                        // The heater PIN and the sensor PIN
+	byte     sPIN;                              // The sensor PIN
 	int      power;                             // The soldering station power
 	byte     actual_power;                      // The power supplied to the iron
 	bool     fix_power;                         // Whether the soldering iron is set the fix power
@@ -1009,7 +1008,6 @@ byte IRON::appliedPower(void) {
 
 void IRON::init(void) {
 	pinMode(sPIN, INPUT);
-	fastPWM.init();                               // Initialization for 31.5 kHz PWM on D10 pin
 	on = false;
 	fix_power = false;
 	power = 0;
@@ -1026,7 +1024,7 @@ void IRON::init(void) {
 void IRON::switchPower(bool On) {
 	on = On;
 	if (!on) {
-		fastPWM.dutyD10(0);
+		pFastPWM->dutyD10(0);
 		fix_power = false;
 		return;
 	}
@@ -1057,7 +1055,7 @@ void IRON::checkIron(void) {
 	}
 
 	if (!on && !fix_power) {                      // If the soldering IRON is set to be switched off
-		fastPWM.dutyD10(0);                            // Surely power off the IRON
+		pFastPWM->dutyD10(0);                            // Surely power off the IRON
 	}
 	if (on && no_iron) {
 		switchPower(false);
@@ -1067,7 +1065,7 @@ void IRON::checkIron(void) {
 void IRON::keepTemp(void) {
 	uint16_t temp = analogRead(sPIN);			// Check the IRON temperature
 	if (actual_power > 0)						// Restore the power applied to the IRON
-	fastPWM.dutyD10(actual_power);
+	pFastPWM->dutyD10(actual_power);
 
 	if (temp < temp_no_iron) {
 		h_temp.put(temp);
@@ -1085,7 +1083,7 @@ void IRON::keepTemp(void) {
 			} else {
 				power = 0;
 				actual_power = 0;
-				fastPWM.dutyD10(actual_power);
+				pFastPWM->dutyD10(actual_power);
 				return;
 			}
 		}
@@ -1096,7 +1094,7 @@ void IRON::keepTemp(void) {
 			chill = true;
 		}
 		h_power.put(actual_power);
-		fastPWM.dutyD10(actual_power);
+		pFastPWM->dutyD10(actual_power);
 	} else {
 		if (!fix_power) actual_power = 0;
 	}
@@ -1106,7 +1104,7 @@ bool IRON::fixPower(byte Power) {
 	if (Power == 0) {                             // To switch off the IRON, set the Power to 0
 		fix_power = false;
 		actual_power = 0;
-		fastPWM.dutyD10(0);
+		pFastPWM->dutyD10(0);
 		return true;
 	}
 
@@ -1125,7 +1123,7 @@ bool IRON::fixPower(byte Power) {
 			actual_power = power & 0xff;
 		}
 	}
-	fastPWM.dutyD10(actual_power);
+	pFastPWM->dutyD10(actual_power);
 	return true;
 }
 
@@ -1992,7 +1990,8 @@ SCREEN* pidSCREEN::menu_long(void) {
 DSPL       disp;
 ENCODER    rotEncoder(R_MAIN_PIN, R_SECD_PIN);
 BUTTON     rotButton(R_BUTN_PIN);
-IRON       iron(heaterPIN, probePIN);
+FastPWM    fastPWM;
+IRON       iron(&fastPWM, probePIN);
 IRON_CFG   ironCfg;
 BUZZER     simpleBuzzer(buzzerPIN);
 
@@ -2051,10 +2050,14 @@ void setup() {
 	disp.init();
 
 	// Load configuration parameters
+	fastPWM.init();
 	ironCfg.init();
 	iron.init();
 	uint16_t temp = ironCfg.tempPreset();
 	iron.setTemp(temp);
+
+	// for test pump pwm
+	fastPWM.dutyD9(100);
 
 	// Initialize rotary encoder
 	rotEncoder.init();
