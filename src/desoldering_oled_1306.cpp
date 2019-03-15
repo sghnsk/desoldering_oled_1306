@@ -15,7 +15,8 @@
 // pid tune mode
 // #define PID_TUNE 1
 // print calibration data
-#define PRINT_CALIBRATION 1
+// #define PRINT_CALIBRATION 1
+// #define SAVE_CALIBRATION 1
 
 // Rotary encoder interface
 const byte R_MAIN_PIN = 2;                      // Rotary Encoder main pin (right)
@@ -2000,6 +2001,12 @@ void print_calibration_data(IRON_CFG* pCfg) {
 }
 #endif
 
+#ifdef SAVE_CALIBRATION
+void save_calibration_data(IRON_CFG* pCfg, uint16_t tip[3]) {
+	pCfg->saveCalibrationData(tip);
+	pCfg->savePresetTempHuman(pCfg->tempPresetHuman());
+}
+#endif
 //=================================== End of class declarations ================================================
 
 DSPL       disp;
@@ -2073,6 +2080,10 @@ void setup() {
 
 #ifdef PRINT_CALIBRATION
 	print_calibration_data(&ironCfg);
+#endif
+#ifdef SAVE_CALIBRATION
+	uint16_t tip[3] = {458, 665, 919};
+	save_calibration_data(&ironCfg, tip);
 #endif
 
 	// for test pump pwm
