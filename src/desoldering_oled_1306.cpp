@@ -21,7 +21,7 @@ const byte R_SECD_PIN = 4;                      // Rotary Encoder second pin (le
 const byte R_BUTN_PIN = 3;                      // Rotary Encoder push button pin
 
 const byte probePIN  = A0;                      // Thermometer pin from soldering iron
-const byte buzzerPIN = 11;                      // The simple buzzer to make a noise
+const byte buzzerPIN = A1;                      // The simple buzzer to make a noise
 
 const uint16_t temp_minC = 180;                 // Minimum temperature in degrees of celsius
 const uint16_t temp_maxC = 400;                 // Maximum temperature in degrees of celsius
