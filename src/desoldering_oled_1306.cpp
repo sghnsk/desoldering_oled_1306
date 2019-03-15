@@ -14,6 +14,8 @@
 
 // pid tune mode
 // #define PID_TUNE 1
+// print calibration data
+#define PRINT_CALIBRATION 1
 
 // Rotary encoder interface
 const byte R_MAIN_PIN = 2;                      // Rotary Encoder main pin (right)
@@ -1985,6 +1987,19 @@ SCREEN* pidSCREEN::menu_long(void) {
 	return this;
 }
 #endif
+
+#ifdef PRINT_CALIBRATION
+void print_calibration_data(IRON_CFG* pCfg) {
+	uint16_t tip[3];	
+	pCfg->getCalibrationData(tip);
+	for (byte i = 0; i < 3; ++i) {
+		Serial.print(tip[i]);
+		Serial.print(F(" "));
+	}
+	Serial.println();
+}
+#endif
+
 //=================================== End of class declarations ================================================
 
 DSPL       disp;
@@ -2044,7 +2059,7 @@ void rotPushChange(void) {
 
 // the setup routine runs once when you press reset:
 void setup() {
-#ifdef PID_TUNE
+#if defined(PID_TUNE) || defined(PRINT_CALIBRATION)
 	Serial.begin(9600);
 #endif
 	disp.init();
@@ -2055,6 +2070,10 @@ void setup() {
 	iron.init();
 	uint16_t temp = ironCfg.tempPreset();
 	iron.setTemp(temp);
+
+#ifdef PRINT_CALIBRATION
+	print_calibration_data(&ironCfg);
+#endif
 
 	// for test pump pwm
 	fastPWM.dutyD9(100);
