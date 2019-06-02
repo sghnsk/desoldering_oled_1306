@@ -45,6 +45,7 @@ struct cfg {
 	uint16_t temp;                                // The preset temperature of the IRON in the internal units
 	byte     off_timeout;                         // The Automatic switch-off timeout in minutes [0 - 30]
 	bool     celsius;                             // Temperature units: true - Celsius, false - Farenheit
+	byte     pump_pwm_duty;                       // FastPWM duty for PUMP
 };
 
 class CONFIG {
