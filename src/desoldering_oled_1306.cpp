@@ -2058,7 +2058,7 @@ void setup() {
 	iron.setTemp(temp);
 
 	// for test pump pwm
-	fastPWM.dutyD9(100);
+	fastPWM.dutyD9(150);
 
 	// Initialize rotary encoder
 	rotEncoder.init();
